@@ -1,0 +1,1 @@
+public record GeoSearchDTO(String location, double radiusKm) {}
