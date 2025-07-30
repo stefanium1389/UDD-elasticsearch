@@ -60,8 +60,8 @@ public class IndexingServiceImpl implements IndexingService {
         
         MultipartFile documentFile = new MockMultipartFile(
         	    "file",
-        	    index.getTitle()+".pdf", // or just "file.pdf" if you don't know it
-        	    "application/pdf",           // optional MIME type
+        	    index.getTitle()+".pdf",
+        	    "application/pdf",           
         	    content
         	);
 
@@ -84,6 +84,7 @@ public class IndexingServiceImpl implements IndexingService {
         index.setDatabaseId(savedEntity.getId());
         index.setAffectedOrganization(dto.getAffectedOrganization());
         index.setAffectedOrganizationAddress(dto.getAffectedOrganizationAddress());
+        index.setOrganizationLocation(GeocodingUtil.geocode(dto.getAffectedOrganizationAddress()));
         index.setEmployeeName(dto.getEmployeeName());
         index.setSecurityOrganization(dto.getSecurityOrganization());
         index.setIncidentSeverity(dto.getIncidentSeverity());

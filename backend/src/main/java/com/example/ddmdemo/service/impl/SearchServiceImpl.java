@@ -28,7 +28,7 @@ public class SearchServiceImpl implements SearchService {
 
     private final ElasticsearchOperations elasticsearchTemplate;
 
-    public Page<DummyIndex> searchByVector(float[] queryVector) {
+    public Page<DummyIndex> searchByVector(float[] queryVector, Pageable pageable) {
         Float[] floatObjects = new Float[queryVector.length];
         for (int i = 0; i < queryVector.length; i++) {
             floatObjects[i] = queryVector[i];
@@ -55,6 +55,15 @@ public class SearchServiceImpl implements SearchService {
                 searchQuery.getPageable());
 
         return (Page<DummyIndex>) SearchHitSupport.unwrapSearchHits(searchHitsPaged);
+    }
+
+    public Page<DummyIndex> semanticSearch(String query, Pageable pageable) {
+      try {
+        return searchByVector(VectorizationUtil.getEmbedding(query));
+      } catch (TranslateException e) {
+        log.error("Vectorization failed");
+        return Page.empty();
+      }
     }
 
 
@@ -89,5 +98,37 @@ public class SearchServiceImpl implements SearchService {
 
         return (Page<DummyIndex>) SearchHitSupport.unwrapSearchHits(searchHitsPaged);
     }
+
+    public Page<DummyIndex> geoSearch(String locationText, double radiusInKm, Pageable pageable) {
+    GeoPoint center;
+    try {
+        var center = GeocodingUtil.geocode(locationText); // implement this to call external API
+    } catch (Exception e) {
+        log.error("Geocoding failed for location: " + locationText, e);
+        return Page.empty();
+    }
+
+    var geoDistanceQuery = new GeoDistanceQuery.Builder()
+        .field("organizationLocation")
+        .distance(String.format("%.2fkm", radiusInKm))
+        .location(new GeoLocation.Builder()
+            .lat(center.getLat())
+            .lon(center.getLon())
+            .build())
+        .build();
+
+    var query = new Query.Builder()
+        .geoDistance(geoDistanceQuery)
+        .build();
+
+    var searchQuery = NativeQuery.builder()
+        .withQuery(query)
+        .withPageable(pageable)
+        .build();
+
+    var searchHits = elasticsearchTemplate.search(searchQuery, DummyIndex.class);
+    var searchHitsPaged = SearchHitSupport.searchPageFor(searchHits, searchQuery.getPageable());
+    return SearchHitSupport.unwrapSearchHits(searchHitsPaged);
+}
     
 }

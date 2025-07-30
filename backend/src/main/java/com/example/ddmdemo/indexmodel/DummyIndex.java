@@ -35,6 +35,9 @@ public class DummyIndex {
 
     @Field(type = FieldType.Text, store = true, name = "address", analyzer = "serbian_simple")
     private String affectedOrganizationAddress;
+
+    @Field(type = FieldType.GeoPoint, name = "organizationLocation")
+    private GeoPoint organizationLocation;
     
     @Field(type = FieldType.Text, store = true, name = "content_sr", analyzer = "serbian_simple", searchAnalyzer = "serbian_simple")
     private String contentSr;

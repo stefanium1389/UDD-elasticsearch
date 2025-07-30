@@ -1,6 +1,7 @@
 package com.example.ddmdemo.controller;
 
 import com.example.ddmdemo.dto.SearchQueryDTO;
+import com.example.ddmdemo.dto.SemanticSearchDTO;
 import com.example.ddmdemo.indexmodel.DummyIndex;
 import com.example.ddmdemo.service.interfaces.SearchService;
 import lombok.RequiredArgsConstructor;
@@ -24,4 +25,15 @@ public class SearchController {
                                            Pageable pageable) {
         return searchService.advancedSearch(advancedSearchQuery.expression(), pageable);
     }
+
+    @PostMapping("/knn")
+    public Page<DummyIndex> semanticSearch(@RequestBody SemanticSearchDTO request,
+                                           Pageable pageable) {
+        return searchService.semanticSearch(request.query(), pageable);
+    }
+
+    @PostMapping("/geo")
+    public Page<DummyIndex> geoSearch(@RequestBody GeoSearchDTO request, Pageable pageable) {
+    return searchService.geoSearch(request.getLocation(), request.getRadiusKm(), pageable);
+}
 }
