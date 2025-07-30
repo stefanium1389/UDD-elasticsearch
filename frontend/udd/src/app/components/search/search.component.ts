@@ -16,6 +16,8 @@ export class SearchComponent {
 
   selectedFile: File | null = null;
 
+  isKnn: boolean = false;
+
   constructor(private backend: BackendService) { }
 
   showModal = false;
@@ -31,7 +33,15 @@ export class SearchComponent {
 
   onSearch() {
     const query = this.searchQuery.toLowerCase().trim();
-    console.log(query)
+    if(this.isKnn){
+      this.backend.knnSearch(query).subscribe({
+        next: res => console.log(res)
+      })
+    } else {
+      this.backend.search(query).subscribe({
+        next: res=> console.log(res)
+      });
+    }
 
   }
 
@@ -57,7 +67,7 @@ export class SearchComponent {
 
   closeModal() {
     this.showModal = false;
-    this.backend.declineINdex(this.formData).subscribe({
+    this.backend.declineIndex(this.formData).subscribe({
       next: res => {
         console.log(res)
         this.selectedFile = null;

@@ -1,5 +1,6 @@
 package com.example.ddmdemo.controller;
 
+import com.example.ddmdemo.dto.GeoSearchDTO;
 import com.example.ddmdemo.dto.SearchQueryDTO;
 import com.example.ddmdemo.dto.SemanticSearchDTO;
 import com.example.ddmdemo.indexmodel.DummyIndex;
@@ -34,6 +35,6 @@ public class SearchController {
 
     @PostMapping("/geo")
     public Page<DummyIndex> geoSearch(@RequestBody GeoSearchDTO request, Pageable pageable) {
-    return searchService.geoSearch(request.getLocation(), request.getRadiusKm(), pageable);
+    return searchService.geoSearch(request.location(), request.radiusKm(), pageable);
 }
 }

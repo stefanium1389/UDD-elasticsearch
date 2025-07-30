@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { LoginResponseDTO, RegisterResponseDTO, UploadResponseDTO } from '../types/types';
+import { DummyIndex, LoginResponseDTO, Page, RegisterResponseDTO, UploadResponseDTO } from '../types/types';
 
 @Injectable({
   providedIn: 'root'
@@ -30,7 +30,15 @@ export class BackendService {
     return this.http.post(`${this.baseUrl}/api/index/confirm`, data)
   }
 
-  declineINdex(data: UploadResponseDTO){
+  declineIndex(data: UploadResponseDTO){
     return this.http.delete(`${this.baseUrl}/api/index/decline/${data.documentId}`)
+  }
+
+  search(expression: string){
+    return this.http.post<Page<DummyIndex>>(`${this.baseUrl}/api/search`, {expression});
+  }
+
+  knnSearch(query: string){
+    return this.http.post<Page<DummyIndex>>(`${this.baseUrl}/api/search/knn`, {query});
   }
 }

@@ -11,6 +11,7 @@ import com.example.ddmdemo.model.DummyTable;
 import com.example.ddmdemo.respository.DummyRepository;
 import com.example.ddmdemo.service.interfaces.FileService;
 import com.example.ddmdemo.service.interfaces.IndexingService;
+import com.example.ddmdemo.util.GeocodingUtil;
 import com.example.ddmdemo.util.VectorizationUtil;
 import jakarta.transaction.Transactional;
 import java.io.IOException;

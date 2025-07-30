@@ -5,10 +5,12 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
 import org.springframework.data.elasticsearch.annotations.Setting;
+import org.springframework.data.elasticsearch.core.geo.GeoPoint;
 
 @Getter
 @Setter
@@ -31,12 +33,12 @@ public class DummyIndex {
     private String affectedOrganization;
 
     @Field(type = FieldType.Keyword, store = true, name = "incident_severity")
-    private String incidentSeverity; // should be one of: "low", "medium", "high", "critical"
+    private String incidentSeverity; 
 
     @Field(type = FieldType.Text, store = true, name = "address", analyzer = "serbian_simple")
     private String affectedOrganizationAddress;
 
-    @Field(type = FieldType.GeoPoint, name = "organizationLocation")
+    @Field(type = FieldType.Auto, name = "organizationLocation")
     private GeoPoint organizationLocation;
     
     @Field(type = FieldType.Text, store = true, name = "content_sr", analyzer = "serbian_simple", searchAnalyzer = "serbian_simple")

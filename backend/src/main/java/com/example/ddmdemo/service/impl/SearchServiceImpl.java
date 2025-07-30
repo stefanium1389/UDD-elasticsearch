@@ -1,11 +1,17 @@
 package com.example.ddmdemo.service.impl;
 
+import co.elastic.clients.elasticsearch._types.GeoLocation;
 import co.elastic.clients.elasticsearch._types.KnnQuery;
+import co.elastic.clients.elasticsearch._types.query_dsl.GeoDistanceQuery;
 import co.elastic.clients.elasticsearch._types.query_dsl.Query;
 import com.example.ddmdemo.exceptionhandling.exception.MalformedQueryException;
 import com.example.ddmdemo.indexmodel.DummyIndex;
 import com.example.ddmdemo.service.interfaces.SearchService;
 import com.example.ddmdemo.util.ElasticSearchParser;
+import com.example.ddmdemo.util.GeocodingUtil;
+import com.example.ddmdemo.util.VectorizationUtil;
+
+import ai.djl.translate.TranslateException;
 
 import java.util.Arrays;
 import java.util.List;
@@ -18,6 +24,7 @@ import org.springframework.data.elasticsearch.client.elc.NativeQuery;
 import org.springframework.data.elasticsearch.client.elc.NativeQueryBuilder;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.SearchHitSupport;
+import org.springframework.data.elasticsearch.core.geo.GeoPoint;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.stereotype.Service;
 
@@ -28,7 +35,7 @@ public class SearchServiceImpl implements SearchService {
 
     private final ElasticsearchOperations elasticsearchTemplate;
 
-    public Page<DummyIndex> searchByVector(float[] queryVector, Pageable pageable) {
+    public Page<DummyIndex> searchByVector(float[] queryVector) {
         Float[] floatObjects = new Float[queryVector.length];
         for (int i = 0; i < queryVector.length; i++) {
             floatObjects[i] = queryVector[i];
@@ -100,35 +107,41 @@ public class SearchServiceImpl implements SearchService {
     }
 
     public Page<DummyIndex> geoSearch(String locationText, double radiusInKm, Pageable pageable) {
-    GeoPoint center;
-    try {
-        var center = GeocodingUtil.geocode(locationText); // implement this to call external API
-    } catch (Exception e) {
-        log.error("Geocoding failed for location: " + locationText, e);
-        return Page.empty();
+        GeoPoint center;
+        try {
+            center = GeocodingUtil.geocode(locationText); // This should return a Spring GeoPoint (lat, lon)
+        } catch (Exception e) {
+            log.error("Geocoding failed for location: " + locationText, e);
+            return Page.empty();
+        }
+
+        // Create GeoLocation from GeoPoint
+        GeoLocation location = GeoLocation.of(geo -> geo
+            .latlon(builder -> builder
+                .lat(center.getLat())
+                .lon(center.getLon())
+            )
+        );
+
+        // Build geo_distance query
+        GeoDistanceQuery geoDistanceQuery = new GeoDistanceQuery.Builder()
+            .field("organizationLocation")
+            .distance(String.format("%.2fkm", radiusInKm))
+            .location(location)
+            .build();
+
+        // Wrap into a Query object
+        Query query = new Query.Builder()
+            .geoDistance(geoDistanceQuery)
+            .build();
+
+        // Build NativeQuery and execute
+        NativeQuery searchQuery = NativeQuery.builder()
+            .withQuery(query)
+            .withPageable(pageable)
+            .build();
+
+        return runQuery(searchQuery);
     }
-
-    var geoDistanceQuery = new GeoDistanceQuery.Builder()
-        .field("organizationLocation")
-        .distance(String.format("%.2fkm", radiusInKm))
-        .location(new GeoLocation.Builder()
-            .lat(center.getLat())
-            .lon(center.getLon())
-            .build())
-        .build();
-
-    var query = new Query.Builder()
-        .geoDistance(geoDistanceQuery)
-        .build();
-
-    var searchQuery = NativeQuery.builder()
-        .withQuery(query)
-        .withPageable(pageable)
-        .build();
-
-    var searchHits = elasticsearchTemplate.search(searchQuery, DummyIndex.class);
-    var searchHitsPaged = SearchHitSupport.searchPageFor(searchHits, searchQuery.getPageable());
-    return SearchHitSupport.unwrapSearchHits(searchHitsPaged);
-}
     
 }

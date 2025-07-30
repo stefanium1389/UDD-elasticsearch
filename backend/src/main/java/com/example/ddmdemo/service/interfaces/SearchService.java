@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 public interface SearchService {
 
     Page<DummyIndex> advancedSearch(String expression, Pageable pageable);
-    public Page<DummyIndex> semanticSearch(String query, Pageable pageable)
+    Page<DummyIndex> semanticSearch(String query, Pageable pageable);
+	Page<DummyIndex> geoSearch(String location, double radiusKm, Pageable pageable);
     
 }
