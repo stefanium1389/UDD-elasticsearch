@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { LoginResponseDTO, RegisterResponseDTO } from '../types/types';
+import { LoginResponseDTO, RegisterResponseDTO, UploadResponseDTO } from '../types/types';
 
 @Injectable({
   providedIn: 'root'
@@ -18,5 +18,19 @@ export class BackendService {
 
   register(username: string, password: string) {
     return this.http.post<RegisterResponseDTO>(`${this.baseUrl}/api/auth/register`, {username, password})
+  }
+
+  uploadFile(file: File) {
+    const formData = new FormData();
+    formData.append('file', file)
+    return this.http.post<UploadResponseDTO>(`${this.baseUrl}/api/index`, formData)
+  }
+
+  confirmIndex(data: UploadResponseDTO){
+    return this.http.post(`${this.baseUrl}/api/index/confirm`, data)
+  }
+
+  declineINdex(data: UploadResponseDTO){
+    return this.http.delete(`${this.baseUrl}/api/index/decline/${data.documentId}`)
   }
 }

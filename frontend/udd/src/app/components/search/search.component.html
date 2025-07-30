@@ -1,0 +1,50 @@
+<div class="container">
+    <div class="top-bar">
+        <input type="file" (change)="onFileSelected($event)" />
+        <button [disabled]="!selectedFile" (click)="uploadFile()">Upload</button>
+    </div>
+    <div>
+        <input class="wide-input" type="text" placeholder="Search..." [(ngModel)]="searchQuery" />
+        <button (click)="onSearch()">Search</button>
+    </div>
+</div>
+
+<!-- Modal -->
+@if (showModal){
+<div class="modal">
+    <div class="modal-content">
+        <h2>Edit Document Metadata</h2>
+        <form>
+            <label>Title:
+                <h2>{{formData.title}}</h2>
+            </label>
+
+            <label>Employee Name:
+                <input type="text" [(ngModel)]="formData.employeeName" name="employeeName" />
+            </label>
+
+            <label>Security Organization:
+                <input type="text" [(ngModel)]="formData.securityOrganization" name="securityOrganization" />
+            </label>
+
+            <label>Affected Organization:
+                <input type="text" [(ngModel)]="formData.affectedOrganization" name="affectedOrganization" />
+            </label>
+
+            <label>Incident Severity:
+                <input type="text" [(ngModel)]="formData.incidentSeverity" name="incidentSeverity" />
+            </label>
+
+            <label>Affected Org. Address:
+                <input type="text" [(ngModel)]="formData.affectedOrganizationAddress"
+                    name="affectedOrganizationAddress" />
+            </label>
+
+            <div class="modal-actions">
+                <button type="button" (click)="submitModal()">Submit</button>
+                <button type="button" (click)="closeModal()">Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>
+}
