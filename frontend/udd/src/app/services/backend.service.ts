@@ -41,4 +41,12 @@ export class BackendService {
   knnSearch(query: string){
     return this.http.post<Page<DummyIndex>>(`${this.baseUrl}/api/search/knn`, {query});
   }
+
+  geoSearch(location: string, radiusKm: number){
+    return this.http.post<Page<DummyIndex>>(`${this.baseUrl}/api/search/geo`, {location, radiusKm});
+  }
+
+  downloadFile(filename: string) {
+    return this.http.get(`${this.baseUrl}/api/file/${filename}`, { responseType: 'blob' })
+  }
 }

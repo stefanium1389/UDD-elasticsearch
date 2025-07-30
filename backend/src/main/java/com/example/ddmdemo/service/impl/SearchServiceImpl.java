@@ -60,7 +60,7 @@ public class SearchServiceImpl implements SearchService {
             .build();
         
         Highlight highlight = new Highlight(List.of(
-        		new HighlightField("sr_content"), new HighlightField("title")));
+        		new HighlightField("content_sr"), new HighlightField("title")));
         HighlightQuery highlightQuery = new HighlightQuery(highlight, null);
 
         var searchQuery = NativeQuery.builder()
@@ -80,6 +80,7 @@ public class SearchServiceImpl implements SearchService {
             dto.setTitle(doc.getTitle());
             dto.setServerFilename(doc.getServerFilename());
             dto.setHighlightFields(hit.getHighlightFields()); // Map<String, List<String>>
+            System.out.println(hit.getHighlightFields());
             return dto;
         }).toList();
 
@@ -111,7 +112,7 @@ public class SearchServiceImpl implements SearchService {
             throw new MalformedQueryException("Failed to parse search expression: " + e.getMessage());
         }
         Highlight highlight = new Highlight(List.of(
-        		new HighlightField("sr_content"), new HighlightField("title")));
+        		new HighlightField("content_sr"), new HighlightField("title")));
         HighlightQuery highlightQuery = new HighlightQuery(highlight, null);
         var searchQueryBuilder = new NativeQueryBuilder()
             .withQuery(parsedQuery)
@@ -133,7 +134,8 @@ public class SearchServiceImpl implements SearchService {
             SearchResultDTO dto = new SearchResultDTO();
             dto.setTitle(doc.getTitle());
             dto.setServerFilename(doc.getServerFilename());
-            dto.setHighlightFields(hit.getHighlightFields()); // Map<String, List<String>>
+            dto.setHighlightFields(hit.getHighlightFields());
+            System.out.println(hit.getHighlightFields());
             return dto;
         }).toList();
         return new PageImpl<>(dtoList, searchQuery.getPageable(), searchHitsPaged.getTotalElements());

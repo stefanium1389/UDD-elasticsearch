@@ -33,7 +33,7 @@ public class TokenUtils {
 	public String SECRET;
 
 	// Period vazenja tokena - 30 minuta
-	@Value("600000")
+	@Value("60000000")
 	private int EXPIRES_IN;
 	
 	@Value("1800000")

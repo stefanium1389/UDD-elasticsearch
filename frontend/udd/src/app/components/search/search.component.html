@@ -5,8 +5,29 @@
     </div>
     <div>
         <input class="wide-input" type="text" placeholder="Search..." [(ngModel)]="searchQuery" />
+        @if(isGeo){
+            <label>Radius Km</label><input type="number" placeholder="Radius" [(ngModel)]="radiusKm"/><br>
+        }
         <button (click)="onSearch()">Search</button>
-        <input type="checkbox" [(ngModel)]="isKnn"/><label>KNN Semantic Search</label>
+        <input type="checkbox" [(ngModel)]="isKnn" [disabled]="isGeo"/><label>KNN Semantic Search</label>
+        <input type="checkbox" [(ngModel)]="isGeo" [disabled]="isKnn"/><label>Geo Search</label>
+    </div>
+    <div>
+        @for(item of filteredResults; track item) {
+            <div>
+                <h2 >{{item.title}}</h2>
+                @if(item.highlightFields){
+                    @for(key of getHighlightFields(item); track key){
+                        <p>{{key}}</p>
+                        @for(snippet of item.highlightFields[key]; track snippet){
+                            <span [innerHTML]="sanitize(snippet)"></span>
+                        }
+                    }
+                }
+            </div>
+            <button (click)="download(item.serverFilename, item.title)">Download</button>
+            <br>
+        }
     </div>
 </div>
 

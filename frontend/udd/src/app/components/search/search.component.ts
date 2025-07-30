@@ -2,6 +2,7 @@ import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { BackendService } from '../../services/backend.service';
 import { UploadResponseDTO } from '../../types/types';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 
 @Component({
   selector: 'app-search',
@@ -12,13 +13,15 @@ import { UploadResponseDTO } from '../../types/types';
 })
 export class SearchComponent {
   searchQuery = '';
-  filteredResults: string[] = [];
+  radiusKm: number = 100;
+  filteredResults: any[] = [];
 
   selectedFile: File | null = null;
 
   isKnn: boolean = false;
+  isGeo: boolean = false;
 
-  constructor(private backend: BackendService) { }
+  constructor(private backend: BackendService, private sanitizer: DomSanitizer) { }
 
   showModal = false;
   formData: UploadResponseDTO = {
@@ -35,11 +38,17 @@ export class SearchComponent {
     const query = this.searchQuery.toLowerCase().trim();
     if(this.isKnn){
       this.backend.knnSearch(query).subscribe({
-        next: res => console.log(res)
+        next: res => {this.filteredResults = res.content; console.log(res)}
       })
-    } else {
+    }
+    else if (this.isGeo){
+      this.backend.geoSearch(query, this.radiusKm).subscribe({
+        next: res => {this.filteredResults = res.content; console.log(res)}
+      })
+    }
+    else {
       this.backend.search(query).subscribe({
-        next: res=> console.log(res)
+        next: res=> {this.filteredResults = res.content; console.log(res)}
       });
     }
 
@@ -84,5 +93,24 @@ export class SearchComponent {
         this.showModal = false;
       }
     })
+  }
+  download(filename: string, title: string) {
+    this.backend.downloadFile(filename).subscribe({
+      next: res => {
+        const objectUrl = URL.createObjectURL(res);
+        const a = document.createElement('a');
+        a.href = objectUrl;
+        a.download = title;
+        a.click();
+        URL.revokeObjectURL(objectUrl);
+      }
+    })
+  }
+  getHighlightFields(item: any): string[] {
+    return Object.keys(item.highlightFields || {});
+  }
+
+  sanitize(html: string): SafeHtml {
+    return this.sanitizer.bypassSecurityTrustHtml(html);
   }
 }
