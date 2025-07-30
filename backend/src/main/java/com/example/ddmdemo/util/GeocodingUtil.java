@@ -1,41 +1,31 @@
 package com.example.ddmdemo.util;
 
 import org.springframework.data.elasticsearch.core.geo.GeoPoint;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.web.client.RestTemplate;
-import org.springframework.web.util.UriComponentsBuilder;
+import org.springframework.web.reactive.function.client.WebClient;
+
+import reactor.core.publisher.Mono;
 
 public class GeocodingUtil {
 
     private static final String NOMINATIM_URL = "https://nominatim.openstreetmap.org/search";
+    private static final WebClient webClient = WebClient.builder()
+            .baseUrl(NOMINATIM_URL)
+            .defaultHeader("User-Agent", "bogdanovic.r240.2024@uns.ac.rs")
+            .defaultHeader("Accept", "application/json")
+            .build();
 
     public static GeoPoint geocode(String location) {
-    	location = location.replace(" ", "+");
-        RestTemplate restTemplate = new RestTemplate();
 
-        UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(NOMINATIM_URL)
-            .queryParam("q", location)
-            .queryParam("format", "json")
-            .queryParam("limit", 1);
-        
+    	Mono<NominatimResponse[]> responseMono = webClient.get()
+                .uri(uriBuilder -> uriBuilder
+                    .queryParam("q", location)
+                    .queryParam("format", "json")
+                    .queryParam("limit", 1)
+                    .build())
+                .retrieve()
+                .bodyToMono(NominatimResponse[].class);
 
-        HttpHeaders headers = new HttpHeaders();
-        headers.set("User-Agent", "bogdanovic.r240.2024@uns.ac.rs");
-        
-        String uri = builder.toUriString();
-
-        HttpEntity<String> entity = new HttpEntity<>(headers);
-
-        var responseEntity = restTemplate.exchange(
-            uri,
-            HttpMethod.GET,
-            entity,
-            NominatimResponse[].class
-        );
-
-        var response = responseEntity.getBody();
+        NominatimResponse[] response = responseMono.block();
 
         if (response == null || response.length == 0) {
             throw new RuntimeException("No geocoding result for location: " + location);

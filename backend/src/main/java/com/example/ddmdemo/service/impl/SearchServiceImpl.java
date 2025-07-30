@@ -58,14 +58,9 @@ public class SearchServiceImpl implements SearchService {
             .k(10)
             .boost(10.0f)
             .build();
-        
-        Highlight highlight = new Highlight(List.of(
-        		new HighlightField("content_sr"), new HighlightField("title")));
-        HighlightQuery highlightQuery = new HighlightQuery(highlight, null);
 
         var searchQuery = NativeQuery.builder()
             .withKnnQuery(knnQuery)
-            .withHighlightQuery(highlightQuery)
             .withMaxResults(5)
             .withSearchType(null)
             .build();
@@ -79,8 +74,6 @@ public class SearchServiceImpl implements SearchService {
             SearchResultDTO dto = new SearchResultDTO();
             dto.setTitle(doc.getTitle());
             dto.setServerFilename(doc.getServerFilename());
-            dto.setHighlightFields(hit.getHighlightFields()); // Map<String, List<String>>
-            System.out.println(hit.getHighlightFields());
             return dto;
         }).toList();
 
@@ -111,8 +104,7 @@ public class SearchServiceImpl implements SearchService {
         } catch (Exception e) {
             throw new MalformedQueryException("Failed to parse search expression: " + e.getMessage());
         }
-        Highlight highlight = new Highlight(List.of(
-        		new HighlightField("content_sr"), new HighlightField("title")));
+        Highlight highlight = new Highlight(List.of(new HighlightField("title"), new HighlightField("content_sr")));
         HighlightQuery highlightQuery = new HighlightQuery(highlight, null);
         var searchQueryBuilder = new NativeQueryBuilder()
             .withQuery(parsedQuery)
@@ -135,6 +127,7 @@ public class SearchServiceImpl implements SearchService {
             dto.setTitle(doc.getTitle());
             dto.setServerFilename(doc.getServerFilename());
             dto.setHighlightFields(hit.getHighlightFields());
+            dto.setAddress(doc.getAffectedOrganizationAddress());
             System.out.println(hit.getHighlightFields());
             return dto;
         }).toList();

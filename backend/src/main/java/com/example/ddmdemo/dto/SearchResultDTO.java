@@ -15,5 +15,6 @@ import lombok.Setter;
 public class SearchResultDTO {
 	private String title;
 	private String serverFilename;
+	private String address;
 	private Map<String, List<String>> highlightFields;
 }

@@ -24,6 +24,9 @@
                         }
                     }
                 }
+                @if(isGeo){
+                    <p>Address: {{item.address}}</p>
+                }
             </div>
             <button (click)="download(item.serverFilename, item.title)">Download</button>
             <br>
