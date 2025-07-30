@@ -23,25 +23,25 @@ public class DummyIndex {
     @Id
     private String id;
 
-    @Field(type = FieldType.Text, store = true, name = "employee_name", analyzer = "serbian_simple")
+    @Field(type = FieldType.Text, store = true, name = "employee_name", analyzer = "serbian_custom")
     private String employeeName;
 
-    @Field(type = FieldType.Text, store = true, name = "organization", analyzer = "serbian_simple")
+    @Field(type = FieldType.Text, store = true, name = "organization", analyzer = "serbian_custom")
     private String securityOrganization;
 
-    @Field(type = FieldType.Text, store = true, name = "affected_organization", analyzer = "serbian_simple")
+    @Field(type = FieldType.Text, store = true, name = "affected_organization", analyzer = "serbian_custom")
     private String affectedOrganization;
 
     @Field(type = FieldType.Keyword, store = true, name = "incident_severity")
     private String incidentSeverity; 
 
-    @Field(type = FieldType.Text, store = true, name = "address", analyzer = "serbian_simple")
+    @Field(type = FieldType.Text, store = true, name = "address", analyzer = "serbian_custom")
     private String affectedOrganizationAddress;
 
     @Field(type = FieldType.Auto, name = "organizationLocation")
     private GeoPoint organizationLocation;
     
-    @Field(type = FieldType.Text, store = true, name = "content_sr", analyzer = "serbian_simple", searchAnalyzer = "serbian_simple")
+    @Field(type = FieldType.Text, store = true, name = "content_sr", analyzer = "serbian_custom", searchAnalyzer = "serbian_custom")
     private String contentSr;
     
     @Field(type = FieldType.Text, store = true, name = "title")

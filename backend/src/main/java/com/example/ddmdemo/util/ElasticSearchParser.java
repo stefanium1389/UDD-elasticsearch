@@ -26,6 +26,8 @@ public class ElasticSearchParser {
         }
     }
 
+    private static final String DEFAULT_FIELD = "content_sr";
+
     private List<Token> tokens;
     private int pos = 0;
 
@@ -35,10 +37,9 @@ public class ElasticSearchParser {
 
     private List<Token> tokenize(String input) {
         List<Token> list = new ArrayList<>();
-        // Regex pattern matches operators, parentheses, quoted phrases, field names, words
         Pattern pattern = Pattern.compile(
-            "\\s*(AND|OR|NOT|\\(|\\)|\"[^\"]*\"|\\w+:(?=\\S)|\\S+)\\s*",
-            Pattern.CASE_INSENSITIVE);
+        	    "\\s*(\\w+:|\"[^\"]*\"|AND|OR|NOT|\\(|\\)|\\w+|\\S)\\s*",
+        	    Pattern.CASE_INSENSITIVE);
         Matcher matcher = pattern.matcher(input);
 
         while (matcher.find()) {
@@ -60,6 +61,9 @@ public class ElasticSearchParser {
             }
         }
         list.add(new Token(TokenType.EOF, null));
+        for(int i = 0; i < list.size(); i++) {
+        	System.err.println(list.get(i));
+        }
         return list;
     }
 
@@ -81,15 +85,12 @@ public class ElasticSearchParser {
         return q;
     }
 
-    // OR operator: lowest precedence
     private Query parseOr() {
         Query left = parseAnd();
         while (match(TokenType.OR)) {
             Query right = parseAnd();
-
             Query finalLeft = left;
             Query finalRight = right;
-
             left = buildBool(bool -> bool
                 .should(finalLeft)
                 .should(finalRight)
@@ -98,23 +99,33 @@ public class ElasticSearchParser {
         return left;
     }
 
-    // AND operator: middle precedence
     private Query parseAnd() {
         Query left = parseNot();
-        while (match(TokenType.AND)) {
-            Query right = parseNot();
 
-            Query finalLeft = left;
-            Query finalRight = right;
-
-            left = buildBool(bool -> bool
-                .must(finalLeft)
-                .must(finalRight));
+        while (true) {
+            if (match(TokenType.AND)) {
+                // Explicit AND
+                Query right = parseNot();
+                Query finalLeft = left;
+                Query finalRight = right;
+                left = buildBool(bool -> bool
+                    .must(finalLeft)
+                    .must(finalRight));
+            } else if (isImplicitAnd(peek().type)) {
+                // Implicit AND
+                Query right = parseNot();
+                Query finalLeft = left;
+                Query finalRight = right;
+                left = buildBool(bool -> bool
+                    .must(finalLeft)
+                    .must(finalRight));
+            } else {
+                break;
+            }
         }
         return left;
     }
 
-    // NOT operator: highest precedence
     private Query parseNot() {
         if (match(TokenType.NOT)) {
             Query expr = parseNot();
@@ -123,7 +134,6 @@ public class ElasticSearchParser {
         return parseTerm();
     }
 
-    // Term: could be a field query, phrase, word, or parenthesis expression
     private Query parseTerm() {
         if (match(TokenType.LPAREN)) {
             Query expr = parseOr();
@@ -149,28 +159,26 @@ public class ElasticSearchParser {
 
         if (peek().type == TokenType.PHRASE) {
             String phrase = consume().text;
-            return buildMatchPhrase(null, phrase);
+            return buildMatchPhrase(DEFAULT_FIELD, phrase);  // Use default field here
         }
 
         if (peek().type == TokenType.WORD) {
             String word = consume().text;
-            return buildMatch(null, word);
+            return buildMatch(DEFAULT_FIELD, word);          // Use default field here
         }
 
         throw new RuntimeException("Unexpected token: " + peek().text);
     }
 
-    // Helper functions to create Elasticsearch Query DSL objects
-
     private Query buildMatch(String field, String text) {
         MatchQuery.Builder builder = new MatchQuery.Builder().query(text);
-        if (field != null) builder.field(field);
+        builder.field(field);  // Field is never null now
         return new Query.Builder().match(builder.build()).build();
     }
 
     private Query buildMatchPhrase(String field, String phrase) {
         MatchPhraseQuery.Builder builder = new MatchPhraseQuery.Builder().query(phrase);
-        if (field != null) builder.field(field);
+        builder.field(field);  // Field is never null now
         return new Query.Builder().matchPhrase(builder.build()).build();
     }
 
@@ -178,5 +186,13 @@ public class ElasticSearchParser {
         BoolQuery.Builder builder = new BoolQuery.Builder();
         consumer.accept(builder);
         return new Query.Builder().bool(builder.build()).build();
+    }
+    
+    private boolean isImplicitAnd(TokenType type) {
+        return type == TokenType.WORD ||
+               type == TokenType.PHRASE ||
+               type == TokenType.FIELD ||
+               type == TokenType.LPAREN ||
+               type == TokenType.NOT;
     }
 }
