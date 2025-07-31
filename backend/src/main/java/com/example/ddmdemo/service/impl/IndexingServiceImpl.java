@@ -91,7 +91,7 @@ public class IndexingServiceImpl implements IndexingService {
         index.setIncidentSeverity(dto.getIncidentSeverity());
         
         dummyIndexRepository.save(index);
-
+        log.info("STATISTIC-LOG Indexed file {} with employee_name:{} affected_organization:{} address:{}", index.getTitle(), index.getEmployeeName(), index.getAffectedOrganization(), index.getAffectedOrganizationAddress());
         return serverFilename;
     }
     

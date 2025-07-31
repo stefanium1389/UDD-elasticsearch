@@ -2,6 +2,7 @@ import { Routes } from '@angular/router';
 import { LoginComponent } from './components/login/login.component';
 import { RegisterComponent } from './components/register/register.component';
 import { SearchComponent } from './components/search/search.component';
+import { authGuard } from './guards/auth.guard';
 
 export const routes: Routes = [
   {
@@ -14,6 +15,7 @@ export const routes: Routes = [
   },
   {
     path: 'search',
-    loadComponent: () => import('./components/search/search.component').then(m => m.SearchComponent)
+    loadComponent: () => import('./components/search/search.component').then(m => m.SearchComponent),
+    canActivate: [authGuard]
   }
 ];

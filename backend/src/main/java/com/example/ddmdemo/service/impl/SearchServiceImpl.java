@@ -2,6 +2,8 @@ package com.example.ddmdemo.service.impl;
 
 import co.elastic.clients.elasticsearch._types.GeoLocation;
 import co.elastic.clients.elasticsearch._types.KnnQuery;
+import co.elastic.clients.elasticsearch._types.SortOptions;
+import co.elastic.clients.elasticsearch._types.SortOrder;
 import co.elastic.clients.elasticsearch._types.query_dsl.GeoDistanceQuery;
 import co.elastic.clients.elasticsearch._types.query_dsl.Query;
 
@@ -157,7 +159,14 @@ public class SearchServiceImpl implements SearchService {
             .distance(String.format("%.2fkm", radiusInKm))
             .location(location)
             .build();
-
+        
+        SortOptions geoDistanceSort = SortOptions.of(sort -> sort
+        	    .geoDistance(gds -> gds
+        	        .field("organizationLocation")
+        	        .location(location)
+        	        .order(SortOrder.Asc) // Ascending = closest first
+        	    )
+        	);
         // Wrap into a Query object
         Query query = new Query.Builder()
             .geoDistance(geoDistanceQuery)
@@ -167,6 +176,7 @@ public class SearchServiceImpl implements SearchService {
         NativeQuery searchQuery = NativeQuery.builder()
             .withQuery(query)
             .withPageable(pageable)
+            .withSort(List.of(geoDistanceSort))
             .build();
 
         return runQuery(searchQuery);

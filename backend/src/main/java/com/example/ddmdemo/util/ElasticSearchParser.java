@@ -9,6 +9,7 @@ import co.elastic.clients.elasticsearch._types.query_dsl.BoolQuery;
 import co.elastic.clients.elasticsearch._types.query_dsl.MatchPhraseQuery;
 import co.elastic.clients.elasticsearch._types.query_dsl.MatchQuery;
 import co.elastic.clients.elasticsearch._types.query_dsl.Query;
+import co.elastic.clients.elasticsearch._types.query_dsl.TermQuery;
 
 public class ElasticSearchParser {
 
@@ -38,8 +39,8 @@ public class ElasticSearchParser {
     private List<Token> tokenize(String input) {
         List<Token> list = new ArrayList<>();
         Pattern pattern = Pattern.compile(
-        	    "\\s*(\\w+:|\"[^\"]*\"|AND|OR|NOT|\\(|\\)|\\w+|\\S)\\s*",
-        	    Pattern.CASE_INSENSITIVE);
+        	    "\\s*([\\p{L}\\p{N}_]+:|\"[^\"]*\"|AND|OR|NOT|\\(|\\)|[\\p{L}\\p{N}_]+|\\S)\\s*",
+        	    Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CHARACTER_CLASS);
         Matcher matcher = pattern.matcher(input);
 
         while (matcher.find()) {
@@ -151,7 +152,11 @@ public class ElasticSearchParser {
                 return buildMatchPhrase(field, next.text);
             } else if (next.type == TokenType.WORD) {
                 consume();
-                return buildMatch(field, next.text);
+                if (field.equals("incident_severity")) {
+                    return buildTerm(field, next.text);
+                } else {
+                    return buildMatch(field, next.text);
+                }
             } else {
                 throw new RuntimeException("Expected phrase or word after field");
             }
@@ -172,14 +177,20 @@ public class ElasticSearchParser {
 
     private Query buildMatch(String field, String text) {
         MatchQuery.Builder builder = new MatchQuery.Builder().query(text);
-        builder.field(field);  // Field is never null now
+        builder.field(field).analyzer("serbian_custom");  // Field is never null now
         return new Query.Builder().match(builder.build()).build();
     }
 
     private Query buildMatchPhrase(String field, String phrase) {
         MatchPhraseQuery.Builder builder = new MatchPhraseQuery.Builder().query(phrase);
-        builder.field(field);  // Field is never null now
+        builder.field(field).analyzer("serbian_custom");  // Field is never null now
         return new Query.Builder().matchPhrase(builder.build()).build();
+    }
+    
+    private Query buildTerm(String field, String value) {
+        TermQuery.Builder builder = new TermQuery.Builder().value(value);
+        builder.field(field);
+        return new Query.Builder().term(builder.build()).build();
     }
 
     private Query buildBool(java.util.function.Consumer<BoolQuery.Builder> consumer) {
