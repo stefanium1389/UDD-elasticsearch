@@ -26,8 +26,8 @@ services:
     ports:
       - "5044:5044"
     volumes:
-      - "./backend/logstash-ingest-data/:/usr/share/logstash/ingest_data/:rw"
-      - "./logstash-config/logstash.conf:/usr/share/logstash/pipeline/logstash.conf"
+      - ./backend/logstash-ingest-data/application.log:/usr/share/logstash/ingest_data/application.log:rw
+      - ./logstash-config/logstash.conf:/usr/share/logstash/pipeline/logstash.conf
     restart: always
     networks:
       - ddmdemo-network

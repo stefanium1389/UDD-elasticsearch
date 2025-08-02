@@ -32,3 +32,5 @@ build/
 ### VS Code ###
 .vscode/
 /udd-db
+/backend/logstash-ingest-data
+/backend/logstash-ingest-data
